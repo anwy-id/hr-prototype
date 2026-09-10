@@ -1,0 +1,1666 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>任用审批流程-经理级以上-滑动版</title>
+  <script src="vue.global.js"></script>
+  <script>
+    // 本地 Vue 缺失时回退 CDN，避免白屏
+    if (typeof Vue === 'undefined') {
+      document.write('<script src="https://cdn.jsdelivr.net/npm/vue@3.4.21/dist/vue.global.js"><\/script>');
+    }
+  </script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background-color: #e5e7eb;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    #app {
+      width: 414px;
+      height: 796px;
+      background-color: white;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      border-radius: 30px;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .container {
+      width: 100%;
+      height: 100%;
+      background-color: white;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+      padding: 20px 15px 15px;
+      color: white;
+      flex-shrink: 0;
+    }
+
+    .header-content {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+    }
+
+    .header-left {
+      position: absolute;
+      left: 0;
+    }
+
+    .time {
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: 1px;
+    }
+
+    .title {
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    .icons {
+      display: flex;
+      gap: 12px;
+    }
+
+    .icon {
+      width: 20px;
+      height: 20px;
+    }
+
+    .progress-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 15px;
+      background-color: white;
+      border-bottom: 1px solid #e5e7eb;
+      flex-shrink: 0;
+    }
+
+    .progress-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex: 1;
+      position: relative;
+    }
+
+    .progress-circle {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background-color: #e5e7eb;
+      border: 2px solid #e5e7eb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      z-index: 2;
+    }
+
+    .progress-step.active .progress-circle,
+    .progress-step.completed .progress-circle {
+      background-color: #3B82F6;
+      border-color: #3B82F6;
+    }
+
+    .progress-circle-inner {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background-color: #9ca3af;
+    }
+
+    .progress-step.active .progress-circle-inner,
+    .progress-step.completed .progress-circle-inner {
+      background-color: white;
+    }
+
+    .progress-label {
+      font-size: 11px;
+      color: #9ca3af;
+      margin-top: 5px;
+      white-space: nowrap;
+      text-align: center;
+      transition: color 0.3s ease;
+    }
+
+    .progress-step.active .progress-label,
+    .progress-step.completed .progress-label {
+      color: #3B82F6;
+      font-weight: 600;
+    }
+
+    .progress-line {
+      position: absolute;
+      top: 14px;
+      left: calc(50% + 16px);
+      right: calc(-50% + 16px);
+      height: 2px;
+      background-color: #e5e7eb;
+      z-index: 1;
+    }
+
+    .progress-step.completed .progress-line {
+      background-color: #3B82F6;
+    }
+
+    .progress-step:last-child .progress-line {
+      display: none;
+    }
+
+    .content-wrapper {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 0 12px 80px;
+      scrollbar-width: thin;
+      scrollbar-color: #d1d5db transparent;
+      min-height: 0;
+    }
+
+    .content {
+      padding: 10px 0;
+      min-height: 100%;
+    }
+
+    .scroll-section {
+      padding-top: 10px;
+      margin-bottom: 20px;
+    }
+
+    .section-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #3B82F6;
+      margin-bottom: 12px;
+      padding-left: 4px;
+      display: flex;
+      align-items: center;
+    }
+
+    .section-title::before {
+      content: '●';
+      font-size: 14px;
+      margin-right: 8px;
+    }
+
+    .sub-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .sub-tab-btn {
+      flex: 1;
+      padding: 6px;
+      font-size: 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 4px;
+      background-color: white;
+      color: #6b7280;
+      cursor: default;
+    }
+
+    .button-active {
+      background-color: #3B82F6;
+      color: white;
+      border-color: #3B82F6;
+    }
+
+    .info-card {
+      background-color: white;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+
+    .card-header {
+      background-color: #f9fafb;
+      padding: 10px 12px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .card-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #374151;
+    }
+
+    .card-body {
+      padding: 12px;
+      position: relative;
+    }
+
+    .info-row {
+      display: flex;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid #f3f4f6;
+    }
+
+    .info-row:last-child {
+      border-bottom: none;
+    }
+
+    .salary-row {
+      padding: 10px 0;
+    }
+
+    .salary-grid {
+      gap: 0;
+    }
+
+    .salary-grid .label {
+      font-size: 12px;
+      min-width: 140px;
+    }
+
+    .salary-grid .value {
+      font-size: 12px;
+    }
+
+    .label {
+      font-size: 12px;
+      color: #6b7280;
+      min-width: 120px;
+      flex-shrink: 0;
+      margin-right: 15px;
+    }
+
+    .value {
+      font-size: 12px;
+      color: #1f2937;
+      font-weight: 500;
+    }
+
+    .candidate-body {
+      display: flex;
+      gap: 8px;
+    }
+
+    .photo-wrapper {
+      flex-shrink: 0;
+      flex-basis: 55px;
+    }
+
+    .photo {
+      width: 100%;
+      height: auto;
+      max-height: 70px;
+      object-fit: cover;
+      border-radius: 3px;
+      border: 1px solid #e5e7eb;
+    }
+
+    .link {
+      font-size: 11px;
+      color: #3B82F6;
+      text-decoration: none;
+    }
+
+    .link:hover {
+      text-decoration: underline;
+    }
+
+    .collapse-card {
+      background-color: white;
+      border-radius: 4px;
+      border: 1px solid #e5e7eb;
+      margin-bottom: 8px;
+      overflow: hidden;
+    }
+
+    .collapse-header {
+      display: flex;
+      align-items: center;
+      padding: 12px 15px;
+      background-color: #f9fafb;
+      cursor: pointer;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .collapse-icon {
+      width: 18px;
+      height: 18px;
+      color: #3B82F6;
+      font-size: 12px;
+      transition: transform 0.3s ease;
+      margin-right: 10px;
+      flex-shrink: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .collapse-icon.rotate {
+      transform: rotate(180deg);
+    }
+
+    .collapse-title {
+      flex: 1;
+      text-align: center;
+      background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+      color: white;
+      padding: 6px 15px;
+      border-radius: 3px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .collapse-content {
+      padding: 10px;
+    }
+
+    .table-title {
+      font-weight: 600;
+      color: #374151;
+      font-size: 12px;
+      margin: 16px 0 8px 0;
+    }
+
+    .achievement-list {
+      padding: 5px 0;
+    }
+
+    .achievement-item {
+      font-size: 11px;
+      color: #374151;
+      line-height: 1.6;
+      margin-bottom: 5px;
+    }
+
+    .info-row-horizontal {
+      display: flex;
+      justify-content: space-between;
+      gap: 15px;
+    }
+
+    .info-row-horizontal .info-row {
+      flex: 1;
+      justify-content: flex-start;
+    }
+
+    .info-row-horizontal .label {
+      min-width: 100px;
+      margin-right: 10px;
+    }
+
+    .evaluation-table {
+      width: 100%;
+      max-width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 10px;
+      font-size: 12px;
+      table-layout: fixed;
+    }
+
+    .evaluation-table td:first-child,
+    .evaluation-table th:first-child {
+      width: 120px;
+    }
+
+    .evaluation-table th, .evaluation-table td {
+      border: 1px solid #d1d5db;
+      padding: 4px 3px;
+      text-align: center;
+    }
+
+    .evaluation-table th {
+      background-color: #f3f4f6;
+      font-weight: 500;
+      color: #374151;
+    }
+
+    .relation-select {
+      width: auto;
+      min-width: 180px;
+      max-width: 220px;
+      padding: 4px 8px;
+      font-size: 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 4px;
+      background-color: #ffffff;
+      color: #374151;
+      margin-top: 0;
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 8px center;
+      background-size: 12px;
+    }
+
+    .relation-select:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+    }
+
+    .relation-select-transparent {
+      background-color: transparent;
+      border-color: transparent;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    }
+
+    .relation-select-transparent:focus {
+      border-color: transparent;
+      box-shadow: none;
+    }
+
+    .relation-vertical-card {
+      background-color: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      padding: 8px 12px;
+      margin: 10px 0;
+    }
+
+    .relation-vertical-card .info-row:last-child {
+      border-bottom: none;
+    }
+
+    .footer {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      gap: 8px;
+      padding: 12px 12px;
+      background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+    }
+
+    .action-btn {
+      flex: 1;
+      padding: 10px 8px;
+      font-size: 12px;
+      font-weight: 500;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      background-color: white;
+      color: #3B82F6;
+    }
+
+    button:hover:not(:disabled) {
+      opacity: 0.9;
+    }
+
+    button:active:not(:disabled) {
+      transform: scale(0.98);
+    }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      animation: fadeIn 0.2s ease;
+    }
+
+    .modal-content {
+      background-color: white;
+      border-radius: 12px;
+      padding: 30px;
+      margin: 0 20px;
+      text-align: center;
+      animation: slideUp 0.3s ease;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      margin-top: 20px;
+    }
+
+    .modal-btn.confirm-btn {
+      background-color: #3B82F6;
+      color: white;
+      border-color: #3B82F6;
+    }
+
+    .modal-btn.cancel-btn {
+      background-color: #ef4444;
+      color: white;
+      border-color: #ef4444;
+    }
+
+    .approval-comment {
+      width: 100%;
+      height: 80px;
+      padding: 10px;
+      font-size: 13px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      resize: none;
+      margin: 15px 0;
+      color: #374151;
+    }
+
+    .approval-comment::placeholder {
+      color: #9ca3af;
+    }
+
+    .approval-comment:focus {
+      outline: none;
+      border-color: #3B82F6;
+    }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #1f2937;
+      margin-bottom: 8px;
+    }
+
+    .modal-btn {
+      padding: 10px 40px;
+      font-size: 15px;
+      font-weight: 500;
+      background-color: #3B82F6;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .modal-btn:hover {
+      background-color: #2563EB;
+    }
+
+    .approval-table-container {
+      overflow-x: hidden;
+      width: 100%;
+    }
+
+    .approval-table {
+      width: 100%;
+      max-width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      table-layout: fixed;
+    }
+
+    .approval-table th,
+    .approval-table td {
+      border: 1px solid #e5e7eb;
+      padding: 8px 6px;
+      text-align: left;
+      font-size: 12px;
+    }
+
+    .approval-table th {
+      background-color: #f3f4f6;
+      font-weight: 600;
+      color: #374151;
+      white-space: nowrap;
+    }
+
+    .approval-table td {
+      word-break: break-all;
+    }
+
+    .approval-table tr:nth-child(even) {
+      background-color: #ffffff;
+    }
+
+    .approval-table tr:nth-child(odd) {
+      background-color: #f9fafb;
+    }
+
+    .approval-flow {
+      padding-left: 10px;
+    }
+
+    .flow-step {
+      position: relative;
+      padding-left: 20px;
+      margin-bottom: 12px;
+    }
+
+    .flow-step.last {
+      margin-bottom: 0;
+    }
+
+    .flow-dot {
+      position: absolute;
+      left: 0;
+      top: 6px;
+      width: 8px;
+      height: 8px;
+      background-color: #3b82f6;
+      border-radius: 50%;
+      border: 2px solid #3b82f6;
+    }
+
+    .flow-line {
+      position: absolute;
+      left: 3px;
+      top: 16px;
+      width: 2px;
+      height: calc(100% + 8px);
+      background-color: #e5e7eb;
+    }
+
+    .flow-step.last .flow-line {
+      display: none;
+    }
+
+    .flow-content {
+      padding: 10px 12px;
+      background-color: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      margin-left: 8px;
+    }
+
+    .flow-row {
+      display: flex;
+      flex-wrap: wrap;
+      margin-bottom: 4px;
+      font-size: 12px;
+    }
+
+    .flow-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .flow-label {
+      color: #6b7280;
+      min-width: 70px;
+    }
+
+    .flow-value {
+      color: #1f2937;
+      flex: 1;
+    }
+
+    .cursor-pointer {
+      cursor: pointer;
+    }
+
+    .image-preview-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .image-preview-content {
+      max-width: 90%;
+      max-height: 90%;
+      background-color: white;
+      padding: 10px;
+      border-radius: 8px;
+      position: relative;
+    }
+
+    .close-btn {
+      position: absolute;
+      top: -15px;
+      right: -15px;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background-color: #374151;
+      color: white;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+    }
+
+    .image-preview-content img {
+      max-width: 100%;
+      max-height: 70vh;
+      object-fit: contain;
+      transition: transform 0.2s ease;
+      transform-origin: center center;
+    }
+
+    .image-zoom-container {
+      width: 100%;
+      height: 70vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: auto;
+      cursor: zoom-in;
+      position: relative;
+    }
+
+    .image-zoom-container img {
+      max-width: none;
+      max-height: none;
+      width: auto;
+      height: auto;
+    }
+
+    .preview-photo-frame {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      width: 75px;
+      height: 95px;
+      border: none;
+      background-color: transparent;
+      padding: 0;
+      z-index: 20;
+    }
+
+    .preview-photo-frame img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .zoom-hint {
+      text-align: center;
+      color: #9ca3af;
+      font-size: 12px;
+      margin-top: 10px;
+    }
+
+    .report-container {
+      max-height: 500px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 0;
+    }
+
+    .inline-zoom-container {
+      position: relative;
+      overflow: visible;
+      cursor: zoom-in;
+    }
+
+    .inline-zoom-container .report-image {
+      transition: transform 0.2s ease;
+      transform-origin: center center;
+      max-width: 100%;
+      height: auto;
+    }
+
+    .draggable-image {
+      cursor: grab;
+      user-select: none;
+    }
+
+    .draggable-image:active {
+      cursor: grabbing;
+    }
+
+    .report-image {
+      width: 100%;
+      height: auto;
+      border-radius: 4px;
+    }
+
+    .divider {
+      height: 1px;
+      background-color: #f3f4f6;
+      margin: 18px 0;
+    }
+
+    .simple-collapse-header {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    .simple-collapse-icon {
+      font-size: 10px;
+      color: #6b7280;
+      margin-right: 6px;
+      transition: transform 0.3s ease;
+    }
+
+    .simple-collapse-icon.rotate {
+      transform: rotate(180deg);
+    }
+
+    .simple-collapse-title {
+      font-size: 12px;
+      font-weight: 500;
+      color: #374151;
+    }
+
+    .simple-collapse-content {
+      margin-top: 8px;
+    }
+
+    .supplement-text {
+      font-style: italic;
+      color: #9ca3af;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .attachment-link {
+      display: flex;
+      align-items: center;
+      margin-left: auto;
+      padding-left: 12px;
+      font-size: 12px;
+      color: #3b82f6;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .attachment-link:hover {
+      text-decoration: underline;
+    }
+
+    .attachment-icon {
+      font-size: 14px;
+      margin-right: 6px;
+    }
+
+    .attachment-text {
+      font-size: 12px;
+      color: #3b82f6;
+      text-decoration: none;
+    }
+
+    .attachment-text:hover {
+      text-decoration: underline;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes slideUp {
+      from { 
+        opacity: 0; 
+        transform: translateY(20px); 
+      }
+      to { 
+        opacity: 1; 
+        transform: translateY(0); 
+      }
+    }
+    /* ===== 移动端适配：手机上铺满视口，避免固定 414×796 溢出被裁切 ===== */
+    @media screen and (max-width: 480px) {
+      html, body {
+        display: block;
+        height: 100%;
+        background-color: #ffffff;
+      }
+
+      #app {
+        width: 100vw;
+        height: 100vh;
+        height: 100dvh;
+        border-radius: 0;
+        box-shadow: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="container">
+      <header class="header">
+        <div class="header-content">
+          <div class="header-left">
+            <span class="time">9:41</span>
+          </div>
+          <h1 class="title">王十六的任用审批流程</h1>
+        </div>
+      </header>
+
+      <nav class="progress-bar">
+        <div 
+          v-for="(tab, index) in tabs" 
+          :key="tab.id"
+          :class="['progress-step', { 'active': activeSection === tab.id, 'completed': activeSectionIndex > index }]"
+          @click="scrollToSection(tab.id)"
+        >
+          <div class="progress-circle">
+            <div class="progress-circle-inner"></div>
+          </div>
+          <span class="progress-label">{{ tab.name }}</span>
+          <div v-if="index < tabs.length - 1" class="progress-line"></div>
+        </div>
+      </nav>
+
+      <div class="content-wrapper" ref="contentWrapper">
+        <main class="content">
+
+          <div id="section-basic" class="scroll-section">
+            <div class="section-title">任用计划</div>
+
+            <div id="section-position" class="section">
+              <div class="info-card">
+                <div class="card-header">
+                  <span class="card-title">现任职信息</span>
+                </div>
+                <div class="card-body">
+                  <div class="info-row">
+                    <span class="label">人员姓名</span>
+                    <span class="value">王十六</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="label">单位</span>
+                    <span class="value">总部</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="label">部门</span>
+                    <span class="value">人力资源部</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="label">职务</span>
+                    <span class="value">人力资源经理</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="label">职务细项</span>
+                    <span class="value">/</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="label">职层</span>
+                    <span class="value">M2</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="label">职级</span>
+                    <span class="value">经理级</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="label">级别</span>
+                    <span class="value">/</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="label">是否主持工作</span>
+                    <span class="value">否</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="label">直接上级</span>
+                    <span class="value">沈九</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="label">工作地点</span>
+                    <span class="value">北京市丰台区</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="info-card">
+                <div class="card-header">
+                  <span class="card-title">调整后任职信息</span>
+                </div>
+                <div class="card-body">
+                  <div class="info-row">
+                    <span class="label">单位</span>
+                    <span class="value">总部</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="label">部门</span>
+                    <span class="value">人力资源部</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="label">职务</span>
+                    <span class="value">人力资源副总监</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="label">职务细项</span>
+                    <span class="value">/</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="label">职层</span>
+                    <span class="value">M3</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="label">职级</span>
+                    <span class="value">副总监级</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="label">级别</span>
+                    <span class="value">/</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="label">是否主持工作</span>
+                    <span class="value">是</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="label">直接上级</span>
+                    <span class="value">王五</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="label">工作地点</span>
+                    <span class="value">呼和浩特市土默特左旗</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <div id="section-evaluation" class="scroll-section">
+            <div class="section-title">任用条件</div>
+
+            <div class="info-card">
+              <div class="card-body">
+                <div class="info-row">
+                  <span class="label">任用类型</span>
+                  <span class="value">晋职</span>
+                </div>
+                <div class="info-row">
+                  <span class="label">是否特殊报审</span>
+                  <span class="value">否</span>
+                </div>
+                <div class="info-row">
+                  <span class="label">调整原因</span>
+                  <span class="value">岗位空缺，故申请补人</span>
+                </div>
+                <div class="table-title">近三年绩效/价值观评估结果</div>
+                <table class="evaluation-table">
+                  <thead>
+                    <tr>
+                      <th>绩效/价值观</th>
+                      <th>2025年</th>
+                      <th>2024年</th>
+                      <th>2023年</th>
+                      <th>校验结果</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>年度绩效等级结果</td>
+                      <td>A</td>
+                      <td>B+</td>
+                      <td>/</td>
+                      <td>✅</td>
+                    </tr>
+                    <tr>
+                      <td>年度价值观评估结果</td>
+                      <td>优秀</td>
+                      <td>优秀</td>
+                      <td>优秀</td>
+                      <td>✅</td>
+                    </tr>
+                  </tbody>
+                </table>
+                <div class="divider"></div>
+                <div class="table-title">近三年关键业绩</div>
+                <div class="achievement-list">
+                  <div class="achievement-item">1、任职期间招聘到岗关键人才50人+，其中自主招聘30人，预计节约猎聘费500000元。</div>
+                  <div class="achievement-item">2、培养部门梯队人才15+人，满足部门人才需求。</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="info-card">
+              <div class="card-body">
+                <div class="info-row">
+                  <span class="label">是否有编制</span>
+                  <span class="value">是</span>
+                </div>
+                <div class="info-row">
+                  <span class="label">是否符合基础晋升条件</span>
+                  <span class="value">是</span>
+                </div>
+                <div class="info-row">
+                  <span class="label">是否为拟调整岗位梯队人才</span>
+                  <span class="value">否</span>
+                </div>
+                <div class="info-row-horizontal">
+                  <div class="info-row">
+                    <span class="label">是否近三年内有投诉</span>
+                    <span class="value">无投诉 </span>
+                  </div>
+                  <div class="info-row">
+                    <span class="label">投诉核实人员姓名</span>
+                    <span class="value">姜二十</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="info-card">
+              <div class="card-header">
+                <span class="card-title">附件</span>
+              </div>
+              <div class="card-body">
+                <div class="attachment-link" style="margin-left: 0; padding-left: 0;" @click="previewImage('应聘人员信息登记表.png')">
+                  <span class="attachment-icon">📎</span>
+                  <span class="attachment-text">人员信息登记表</span>
+                </div>
+                <div class="attachment-link" style="margin-left: 0; padding-left: 0;" @click="previewImage('任职谈话内容.png')">
+                  <span class="attachment-icon">📎</span>
+                  <span class="attachment-text">其他附件</span>
+                </div>
+              </div>
+            </div>
+            <div class="info-card">
+              <div class="card-body">
+                <div class="simple-collapse-header" @click="toggleCollapse('supplement')">
+                  <span :class="['simple-collapse-icon', { 'rotate': collapsedSections.supplement }]">▼</span>
+                  <span class="simple-collapse-title">补充说明</span>
+                </div>
+                <div v-show="collapsedSections.supplement" class="simple-collapse-content">
+                  <div class="supplement-text">如该信息项无内容，则折叠，有文字描述则展开显示</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="section-relation" class="scroll-section">
+            <div class="section-title">关联关系</div>
+
+            <div class="collapse-card">
+              <div class="collapse-header" @click="toggleCollapse('interestRelation')">
+                <div :class="['collapse-icon', { 'rotate': collapsedSections.interestRelation }]">▼</div>
+                <span class="collapse-title">利益关系</span>
+              </div>
+              <div v-show="collapsedSections.interestRelation" class="collapse-content">
+                <div class="info-row">
+                  <span class="label">是否有利益关系</span>
+                  <select class="relation-select relation-select-transparent" v-model="interestRelationExists">
+                    <option value="yes">是</option>
+                    <option value="no">否</option>
+                  </select>
+                </div>
+                <template v-if="interestRelationExists === 'yes'">
+                  <div class="info-row">
+                    <span class="label">利益关系类型</span>
+                    <select class="relation-select" v-model="interestRelationType">
+                      <option value="conflict">有利益关系有冲突</option>
+                      <option value="no-conflict">有利益关系无冲突</option>
+                    </select>
+                  </div>
+                  <div class="info-row">
+                    <span class="label" style="margin-right: 15px;">是否有亲属在伊利任职</span>
+                    <span class="value">是</span>
+                  </div>
+                  <div class="relation-vertical-card">
+                    <div class="info-row">
+                      <span class="label">员工ID</span>
+                      <span class="value">00100615</span>
+                    </div>
+                    <div class="info-row">
+                      <span class="label">员工姓名</span>
+                      <span class="value">杨某</span>
+                    </div>
+                    <div class="info-row">
+                      <span class="label">与本人关系</span>
+                      <span class="value">堂(表)兄弟姐妹</span>
+                    </div>
+                    <div class="info-row">
+                      <span class="label">亲属职位</span>
+                      <span class="value">{{ interestRelationType === 'conflict' ? '液奶金川**经理' : '总部生活服务公司***管理经理' }}</span>
+                    </div>
+                  </div>
+                  <div class="info-row">
+                    <span class="label">直接上级或单位负责人确认说明</span>
+                  </div>
+                  <span class="link cursor-pointer" @click="previewImage('利益关系说明.png')">利益关系说明</span>
+                </template>
+              </div>
+            </div>
+
+            <div class="collapse-card">
+              <div class="collapse-header" @click="toggleCollapse('hierarchyRelation')">
+                <div :class="['collapse-icon', { 'rotate': collapsedSections.hierarchyRelation }]">▼</div>
+                <span class="collapse-title">直接上下级关系</span>
+              </div>
+              <div v-show="collapsedSections.hierarchyRelation" class="collapse-content">
+                <div class="info-row">
+                  <span class="label">存在与调整后上级历史工作关系</span>
+                  <select class="relation-select relation-select-transparent" v-model="hierarchyRelationExists">
+                    <option value="yes">是</option>
+                    <option value="no">否</option>
+                  </select>
+                </div>
+                <div v-if="hierarchyRelationExists === 'yes'" class="relation-vertical-card">
+                  <div class="info-row">
+                    <span class="label">开始日期</span>
+                    <span class="value">2020-01-01</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="label">结束日期</span>
+                    <span class="value">2023-12-31</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="label">异动人员职位</span>
+                    <span class="value">招聘专员</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="label">与共事人员上下级关系</span>
+                    <span class="value">员工是上级的下级</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="label">共事人员姓名</span>
+                    <span class="value">沈九</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="label">共事人员职位</span>
+                    <span class="value">招聘经理</span>
+                  </div>
+                </div>
+                
+                <div v-if="hierarchyRelationExists === 'yes'" class="info-card">
+                  <div class="card-header">
+                    <span class="card-title">说明</span>
+                  </div>
+                  <div class="card-body">
+                    <span class="value">存在上下级关联关系，但基于业务需求进行职位调整</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="section-salary" class="scroll-section">
+            <div class="section-title">薪资待遇</div>
+
+            <div class="info-card">
+              <div class="card-body">
+                <div class="info-grid salary-grid">
+                  <div class="info-row salary-row">
+                    <span class="label">是否调整薪资</span>
+                    <span class="value">是</span>
+                  </div>
+                  <div class="info-row salary-row">
+                    <span class="label">调整后年度目标总现金额(元/年)</span>
+                    <span class="value">200000</span>
+                  </div>
+                  <div class="info-row salary-row">
+                    <span class="label">调整前年度目标总现金额(元/年)</span>
+                    <span class="value">150000</span>
+                  </div>
+                  <div class="info-row salary-row">
+                    <span class="label">年度调整金额(元/年)</span>
+                    <span class="value">50000</span>
+                  </div>
+                  <div class="info-row salary-row">
+                    <span class="label">年度调整幅度(%)</span>
+                    <span class="value">33%</span>
+                  </div>
+                  <div class="info-row salary-row">
+                    <span class="label">薪资调整说明</span>
+                    <span class="value">因晋升，故调整薪资33%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="section-record" class="scroll-section">
+            <div class="section-title">审批记录</div>
+
+            <div class="info-card">
+              <div class="card-body">
+                <div class="approval-table-container">
+                  <table class="approval-table">
+                    <thead>
+                      <tr>
+                        <th>审批人</th>
+                        <th>审批意见</th>
+                        <th>审批时间</th>
+                        <th>审批结果</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>沈九</td>
+                        <td></td>
+                        <td></td>
+                        <td>待审批</td>
+                      </tr>
+                      <tr>
+                        <td>郭佳男</td>
+                        <td>同意，关注候选人家庭复杂度</td>
+                        <td>2026/07/27 09:57</td>
+                        <td>已批准</td>
+                      </tr>
+                      <tr>
+                        <td>尹娜</td>
+                        <td>同意</td>
+                        <td>2026/07/24 15:32</td>
+                        <td>已批准</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <div class="collapse-card">
+              <div class="collapse-header" @click="toggleCollapse('approvalFlow')">
+                <div :class="['collapse-icon', { 'rotate': collapsedSections.approvalFlow }]">▼</div>
+                <span class="collapse-title">审批流程</span>
+              </div>
+              <div v-show="collapsedSections.approvalFlow" class="collapse-content">
+                <div class="approval-flow">
+                  <div class="flow-step">
+                    <div class="flow-dot"></div>
+                    <div class="flow-line"></div>
+                    <div class="flow-content">
+                      <div class="flow-row"><span class="flow-label">审批人：</span><span class="flow-value">沈九</span></div>
+                      <div class="flow-row"><span class="flow-label">审批角色：</span><span class="flow-value">部门负责人审批</span></div>
+                      <div class="flow-row"><span class="flow-label">状态：</span><span class="flow-value">待审批</span></div>
+                    </div>
+                  </div>
+                  <div class="flow-step">
+                    <div class="flow-dot"></div>
+                    <div class="flow-line"></div>
+                  </div>
+                  <div class="flow-step">
+                    <div class="flow-dot"></div>
+                    <div class="flow-line"></div>
+                    <div class="flow-content">
+                      <div class="flow-row"><span class="flow-label">审批人：</span><span class="flow-value">郭佳男</span></div>
+                      <div class="flow-row"><span class="flow-label">审批角色：</span><span class="flow-value">确认薪资信息</span></div>
+                      <div class="flow-row"><span class="flow-label">状态：</span><span class="flow-value">已批准</span></div>
+                      <div class="flow-row"><span class="flow-label">审批时间：</span><span class="flow-value">2026/07/27 09:57</span></div>
+                    </div>
+                  </div>
+                  <div class="flow-step last">
+                    <div class="flow-dot"></div>
+                    <div class="flow-content">
+                      <div class="flow-row"><span class="flow-label">审批人：</span><span class="flow-value">尹娜</span></div>
+                      <div class="flow-row"><span class="flow-label">审批角色：</span><span class="flow-value">确认薪资信息</span></div>
+                      <div class="flow-row"><span class="flow-label">状态：</span><span class="flow-value">已批准</span></div>
+                      <div class="flow-row"><span class="flow-label">审批时间：</span><span class="flow-value">2026/07/24 15:32</span></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </main>
+      </div>
+
+      <footer class="footer">
+        <button class="action-btn agree-btn" @click="handleAgree">
+          同意
+        </button>
+        <button class="action-btn modify-btn" @click="handleModify">
+          退回发起人
+        </button>
+        <button class="action-btn back-btn" @click="handleBack">
+          退回上节点
+        </button>
+      </footer>
+    </div>
+
+    <div v-if="showModal" class="modal-overlay" @click.self="showModal = false">
+      <div class="modal-content">
+        <template v-if="modalMode === 'confirm'">
+          <div class="modal-title">{{ confirmMessage || '请确认是否提交' }}</div>
+          <textarea 
+            v-model="approvalComment" 
+            class="approval-comment" 
+            placeholder="请输入您的审批意见"
+          ></textarea>
+          <div class="modal-actions">
+            <button class="modal-btn confirm-btn" @click="confirmSubmit">确认</button>
+            <button class="modal-btn cancel-btn" @click="showModal = false">返回</button>
+          </div>
+        </template>
+        <template v-else>
+          <div class="modal-title">{{ modalMessage }}</div>
+          <button class="modal-btn" @click="showModal = false">确定</button>
+        </template>
+      </div>
+    </div>
+
+    <div v-if="showImagePreview" class="image-preview-overlay" @click="closeImagePreview">
+      <div class="image-preview-content" @click.stop>
+        <button class="close-btn" @click="closeImagePreview">×</button>
+        <div class="image-zoom-container" @wheel="handleImageWheel" @dblclick="resetImageScale">
+          <img :src="previewImageUrl" alt="图片预览" :style="{ transform: `scale(${imageScale})` }">
+        </div>
+        <div class="zoom-hint">滚轮缩放 | 双击重置大小</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const { createApp } = Vue
+
+    createApp({
+      data() {
+        return {
+          activeSection: 'basic',
+          activeSubTab: 'position',
+          showModal: false,
+          modalType: '',
+          modalMessage: '',
+          tabs: [
+            { id: 'basic', name: '任用计划' },
+            { id: 'evaluation', name: '任用条件' },
+            { id: 'relation', name: '关联关系' },
+            { id: 'salary', name: '薪资待遇' },
+            { id: 'record', name: '审批记录' }
+          ],
+          collapsedSections: {
+            interestRelation: true,
+            hierarchyRelation: true,
+            approvalFlow: true,
+            supplement: false
+          },
+          confirmAction: '',
+          confirmMessage: '',
+          modalMode: 'result',
+          showImagePreview: false,
+          previewImageUrl: '',
+          interestRelationType: 'no-conflict',
+          interestRelationExists: 'yes',
+          hierarchyRelationExists: 'yes',
+          imageScale: 1,
+          registerScale: 1,
+          approvalComment: '',
+          registerOffsetX: 0,
+          registerOffsetY: 0,
+          isDragging: false,
+          dragStartX: 0,
+          dragStartY: 0,
+          observer: null
+        }
+      },
+      computed: {
+        activeSectionIndex() {
+          return this.tabs.findIndex(t => t.id === this.activeSection)
+        }
+      },
+      mounted() {
+        this.initScrollObserver()
+      },
+      beforeUnmount() {
+        if (this.observer) {
+          this.observer.disconnect()
+        }
+        if (this.$refs.contentWrapper) {
+          this.$refs.contentWrapper.removeEventListener('scroll', this.onScroll)
+        }
+      },
+      methods: {
+        initScrollObserver() {
+          const wrapper = this.$refs.contentWrapper
+          if (!wrapper) return
+
+          wrapper.addEventListener('scroll', this.onScroll)
+          this.updateActiveSection()
+        },
+        onScroll() {
+          this.updateActiveSection()
+        },
+        updateActiveSection() {
+          const wrapper = this.$refs.contentWrapper
+          if (!wrapper) return
+
+          const scrollTop = wrapper.scrollTop
+          const viewportHeight = wrapper.clientHeight
+
+          let currentSection = this.tabs[0].id
+
+          for (const tab of this.tabs) {
+            const element = document.getElementById(`section-${tab.id}`)
+            if (element) {
+              const rect = element.getBoundingClientRect()
+              const wrapperRect = wrapper.getBoundingClientRect()
+              const elementTop = rect.top - wrapperRect.top + scrollTop
+
+              if (elementTop <= scrollTop + 60) {
+                currentSection = tab.id
+              }
+            }
+          }
+
+          this.activeSection = currentSection
+        },
+        scrollToSection(id) {
+          const element = document.getElementById(`section-${id}`)
+          if (element && this.$refs.contentWrapper) {
+            const wrapper = this.$refs.contentWrapper
+            const rect = element.getBoundingClientRect()
+            const wrapperRect = wrapper.getBoundingClientRect()
+            const scrollTo = rect.top - wrapperRect.top + wrapper.scrollTop - 10
+            
+            wrapper.scrollTo({ top: scrollTo, behavior: 'smooth' })
+          }
+        },
+        scrollToSubSection(id) {
+          this.activeSubTab = id
+          const element = document.getElementById(`section-${id}`)
+          if (element && this.$refs.contentWrapper) {
+            const wrapper = this.$refs.contentWrapper
+            const rect = element.getBoundingClientRect()
+            const wrapperRect = wrapper.getBoundingClientRect()
+            const scrollTo = rect.top - wrapperRect.top + wrapper.scrollTop - 60
+            
+            wrapper.scrollTo({ top: scrollTo, behavior: 'smooth' })
+          }
+        },
+        toggleCollapse(section) {
+          this.collapsedSections[section] = !this.collapsedSections[section]
+        },
+        handleAgree() {
+          this.confirmAction = 'agree'
+          this.confirmMessage = '请确认是否同意'
+          this.showConfirmModal()
+        },
+        handleModify() {
+          this.confirmAction = 'modify'
+          this.confirmMessage = '请确认是否退回发起人'
+          this.showConfirmModal()
+        },
+        handleBack() {
+          this.confirmAction = 'back'
+          this.confirmMessage = '请确认是否退回上节点'
+          this.showConfirmModal()
+        },
+        showConfirmModal() {
+          this.showModal = true
+          this.modalMode = 'confirm'
+          this.approvalComment = ''
+        },
+        confirmSubmit() {
+          this.showModal = false
+          this.showResultModal('success', '已提交')
+        },
+        showResultModal(type, message) {
+          this.modalMode = 'result'
+          this.modalType = type
+          this.modalMessage = message
+          this.showModal = true
+        },
+        previewImage(url) {
+          this.previewImageUrl = url
+          this.showImagePreview = true
+          this.imageScale = 1
+        },
+        closeImagePreview() {
+          this.showImagePreview = false
+          this.previewImageUrl = ''
+          this.imageScale = 1
+        },
+        handleImageWheel(e) {
+          e.preventDefault()
+          const delta = e.deltaY > 0 ? -0.1 : 0.1
+          this.imageScale = Math.max(0.5, Math.min(3, this.imageScale + delta))
+        },
+        resetImageScale() {
+          this.imageScale = 1
+        },
+        handleRegisterWheel(e) {
+          e.preventDefault()
+          const delta = e.deltaY > 0 ? -0.1 : 0.1
+          this.registerScale = Math.max(0.5, Math.min(3, this.registerScale + delta))
+        },
+        resetRegisterScale() {
+          this.registerScale = 1
+          this.registerOffsetX = 0
+          this.registerOffsetY = 0
+        },
+        startDrag(e) {
+          if (this.registerScale > 1) {
+            this.isDragging = true
+            this.dragStartX = e.clientX - this.registerOffsetX
+            this.dragStartY = e.clientY - this.registerOffsetY
+            document.addEventListener('mousemove', this.onDrag)
+            document.addEventListener('mouseup', this.stopDrag)
+          }
+        },
+        onDrag(e) {
+          if (this.isDragging) {
+            this.registerOffsetX = e.clientX - this.dragStartX
+            this.registerOffsetY = e.clientY - this.dragStartY
+          }
+        },
+        stopDrag() {
+          this.isDragging = false
+          document.removeEventListener('mousemove', this.onDrag)
+          document.removeEventListener('mouseup', this.stopDrag)
+        }
+      }
+    }).mount('#app')
+  </script>
+</body>
+</html>
